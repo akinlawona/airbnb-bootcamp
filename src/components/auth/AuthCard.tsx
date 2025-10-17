@@ -33,6 +33,7 @@ import { useState } from "react";
 import { Separator } from "../ui/separator";
 import EmailForm from "./EmailForm";
 import PhoneForm from "./PhoneForm";
+import { signIn } from "next-auth/react";
 
 type Props = {};
 
@@ -55,6 +56,7 @@ const AuthCard = (props: Props) => {
             variant="outline"
             className="w-full flex gap-10 border-1 border-black  mb-3 hover:cursor-pointer"
             size="lg"
+            onClick={() => signIn("google")}
           >
             <div className="w-1/4">
               <FcGoogle className="w-1/4" />

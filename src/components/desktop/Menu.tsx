@@ -4,21 +4,32 @@ import { BiGlobe, BiMenu, BiQuestionMark } from "react-icons/bi";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { BsQuestionCircle } from "react-icons/bs";
 import useAuthCardDialogStore from "@/hooks/use-auth-card-dialog";
+import { signOut, useSession } from "next-auth/react";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 type Props = {};
 
 const Menu = (props: Props) => {
   const { open, isOpen } = useAuthCardDialogStore();
+  const { data: session } = useSession();
 
   return (
     <div className="hidden md:flex items-center rounded-full text-gray-600 gap-3 ">
       <div className="text-sm  font-semibold hover:cursor-pointer hover:bg-gray-200 p-2 rounded-full">
         Become a host
       </div>
-      <BiGlobe
-        size={40}
-        className="cursor-pointer border-[1px] rounded-full p-2 bg-gray-100 hover:bg-gray-200 transition"
-      />
+
+      {session && session.user ? (
+        <Avatar>
+          <AvatarImage src={`${session.user.image}`} />
+          <AvatarFallback>{session.user.name?.charAt(0)}</AvatarFallback>
+        </Avatar>
+      ) : (
+        <BiGlobe
+          size={40}
+          className="cursor-pointer border-[1px] rounded-full p-2 bg-gray-100 hover:bg-gray-200 transition"
+        />
+      )}
 
       <Popover>
         <PopoverTrigger asChild>
@@ -55,12 +66,21 @@ const Menu = (props: Props) => {
               </p>
             </div>
             <hr className="my-2" />
-            <p
-              onClick={open}
-              className="text-sm p-2 hover:bg-gray-200 rounded-lg gap-2 hover:cursor-pointer"
-            >
-              Log in or sign up
-            </p>
+            {session?.user ? (
+              <p
+                onClick={() => signOut()}
+                className="text-sm p-2 hover:bg-gray-200 rounded-lg gap-2 hover:cursor-pointer"
+              >
+                Logout
+              </p>
+            ) : (
+              <p
+                onClick={open}
+                className="text-sm p-2 hover:bg-gray-200 rounded-lg gap-2 hover:cursor-pointer"
+              >
+                Log in or sign up
+              </p>
+            )}
           </div>
         </PopoverContent>
       </Popover>
