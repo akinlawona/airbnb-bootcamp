@@ -51,8 +51,8 @@ const TripCard = ({ trip }: Props) => {
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer p-2">
       <div className="flex flex-col sm:flex-row">
-        <Link href={`/listings/${trip.listingId}`}>
-          <div className="relative w-full sm:w-64 h-48 sm:h-auto flex-shrink-0 p-2">
+        <Link href={`/listings/${trip.listingId}`} className="flex-shrink-0">
+          <div className="relative w-full sm:w-64 h-48 p-2">
             <Image
               src={trip.listing.photos[0]?.url || "/images/placeholder.avif"}
               alt={trip.listing.title || "Listing"}
@@ -130,16 +130,16 @@ const TripCard = ({ trip }: Props) => {
             </div>
 
             {/* Show Write Review button for completed trips that haven't been reviewed */}
-            {/* {trip.status === "completed" && !trip.guestReviewedHost && ( */}
-            <Button
-              onClick={handleWriteReview}
-              className="bg-[#FF385C] hover:bg-[#E31C5F] gap-2"
-              size="sm"
-            >
-              <FaStar className="w-4 h-4" />
-              Write a review
-            </Button>
-            {/* )} */}
+            {trip.status === "completed" && !trip.guestReviewedHost && (
+              <Button
+                onClick={handleWriteReview}
+                className="bg-[#FF385C] hover:bg-[#E31C5F] gap-2"
+                size="sm"
+              >
+                <FaStar className="w-4 h-4" />
+                Write a review
+              </Button>
+            )}
 
             {/* Show badge if already reviewed */}
             {trip.guestReviewedHost && (

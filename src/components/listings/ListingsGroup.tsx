@@ -33,7 +33,7 @@ const ListingsGroup = ({ city, country, listings }: ListingGroupProps) => {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
         {listings.map((listing) => (
           <ListingCard key={listing.id} listing={listing} />
         ))}

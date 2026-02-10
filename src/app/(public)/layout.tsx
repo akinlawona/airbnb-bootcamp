@@ -1,3 +1,5 @@
+"use client";
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Nunito } from "next/font/google";
 import "../globals.css";
@@ -11,7 +13,7 @@ import { SessionProvider } from "next-auth/react";
 import AuthDialog from "@/components/auth/AuthDialog";
 import CreateListingDialog from "@/components/listings/CreateListingDialog";
 import ExitDialog from "@/components/listings/ExitDialog";
-import ScrollNavbar from "../../../test-navbar/ScrollNavbar";
+import { usePathname } from "next/navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,26 +30,25 @@ const nunito = Nunito({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Airbnb Julan",
-  description: "Book your vacations and stay anywhere you want",
-};
-
 export default function PublicLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+  const isListingPage = pathname?.startsWith("/listings/");
+
   return (
     <>
       <AuthDialog />
       <CreateListingDialog />
 
-      <div className="hidden md:block">
-        <Navbar />
-        {/* <ScrollNavbar /> */}
-      </div>
-      <div className="md:mt-60">
+      {!isListingPage && (
+        <div className="hidden md:block">
+          <Navbar />
+        </div>
+      )}
+      <div className={isListingPage ? "" : "md:mt-60"}>
         <Container>
           <div className="min-h-screen">{children}</div>
         </Container>

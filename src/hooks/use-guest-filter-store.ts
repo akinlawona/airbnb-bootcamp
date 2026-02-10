@@ -16,6 +16,10 @@ type GuestFilterActions = {
   decreaseInfantsCount: () => void;
   increasePetsCount: () => void;
   decreasePetsCount: () => void;
+  setAdultsCount: (count: number) => void;
+  setChildrenCount: (count: number) => void;
+  setInfantsCount: (count: number) => void;
+  setPetsCount: (count: number) => void;
   reset: () => void;
 };
 
@@ -45,8 +49,14 @@ const useGuestFilterStore = create<GuestFilterState & GuestFilterActions>(
       set((state) => ({ petsCount: state.petsCount + 1 })),
     decreasePetsCount: () =>
       set((state) => ({ petsCount: Math.max(state.petsCount - 1, 0) })),
+    setAdultsCount: (count: number) => set({ adultsCount: Math.max(count, 0) }),
+    setChildrenCount: (count: number) =>
+      set({ childrenCount: Math.max(count, 0) }),
+    setInfantsCount: (count: number) =>
+      set({ infantsCount: Math.max(count, 0) }),
+    setPetsCount: (count: number) => set({ petsCount: Math.max(count, 0) }),
     reset: () => set(initialState),
-  })
+  }),
 );
 
 export default useGuestFilterStore;

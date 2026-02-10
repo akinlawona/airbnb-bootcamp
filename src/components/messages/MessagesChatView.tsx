@@ -181,7 +181,7 @@ export function MessagesChatView({
     pollMessagesInterval();
 
     // Reduced to 2 seconds for faster updates
-    const interval = setInterval(pollMessagesInterval, 10000);
+    const interval = setInterval(pollMessagesInterval, 2000);
     return () => clearInterval(interval);
   }, [conversation?.id]);
 

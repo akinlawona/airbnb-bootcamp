@@ -56,8 +56,12 @@ const CreateReservation = ({
     const checkOut = searchParams.get("checkOut");
 
     if (checkIn && checkOut) {
-      const from = new Date(checkIn);
-      const to = new Date(checkOut);
+      // Parse as local date to avoid timezone issues
+      const [fromYear, fromMonth, fromDay] = checkIn.split("-").map(Number);
+      const [toYear, toMonth, toDay] = checkOut.split("-").map(Number);
+
+      const from = new Date(fromYear, fromMonth - 1, fromDay);
+      const to = new Date(toYear, toMonth - 1, toDay);
 
       if (!isNaN(from.getTime()) && !isNaN(to.getTime())) {
         setDate({ from, to });
@@ -73,54 +77,47 @@ const CreateReservation = ({
     const infants = searchParams.get("infants");
     const pets = searchParams.get("pets");
 
-    const {
-      increaseAdultsCount,
-      increaseChildrenCount,
-      increaseInfantsCount,
-      increasePetsCount,
-    } = useGuestFilterStore.getState();
+    const { setAdultsCount, setChildrenCount, setInfantsCount, setPetsCount } =
+      useGuestFilterStore.getState();
 
     if (adults) {
-      const count = parseInt(adults);
-      for (let i = 0; i < count; i++) {
-        increaseAdultsCount();
-      }
+      setAdultsCount(parseInt(adults));
     }
     if (children) {
-      const count = parseInt(children);
-      for (let i = 0; i < count; i++) {
-        increaseChildrenCount();
-      }
+      setChildrenCount(parseInt(children));
     }
     if (infants) {
-      const count = parseInt(infants);
-      for (let i = 0; i < count; i++) {
-        increaseInfantsCount();
-      }
+      setInfantsCount(parseInt(infants));
     }
     if (pets) {
-      const count = parseInt(pets);
-      for (let i = 0; i < count; i++) {
-        increasePetsCount();
-      }
+      setPetsCount(parseInt(pets));
     }
-  }, [searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const { adultsCount, childrenCount, infantsCount, petsCount } =
     useGuestFilterStore();
+
+  // Helper function to format date in local timezone
+  const formatDateLocal = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
   // Update URL when dates or guests change
   useEffect(() => {
     const params = new URLSearchParams(searchParams.toString());
 
     if (date?.from) {
-      params.set("checkIn", date.from.toISOString().split("T")[0]);
+      params.set("checkIn", formatDateLocal(date.from));
     } else {
       params.delete("checkIn");
     }
 
     if (date?.to) {
-      params.set("checkOut", date.to.toISOString().split("T")[0]);
+      params.set("checkOut", formatDateLocal(date.to));
     } else {
       params.delete("checkOut");
     }
@@ -192,11 +189,11 @@ const CreateReservation = ({
     const params = new URLSearchParams();
 
     if (date?.from) {
-      params.set("checkIn", date.from.toISOString().split("T")[0]);
+      params.set("checkIn", formatDateLocal(date.from));
     }
 
     if (date?.to) {
-      params.set("checkOut", date.to.toISOString().split("T")[0]);
+      params.set("checkOut", formatDateLocal(date.to));
     }
 
     const { adultsCount, childrenCount, infantsCount, petsCount } =
@@ -207,7 +204,9 @@ const CreateReservation = ({
     if (infantsCount > 0) params.set("infants", infantsCount.toString());
     if (petsCount > 0) params.set("pets", petsCount.toString());
 
-    router.push(`/book/stays/${listingId}?${params.toString()}`);
+    const url = `/book/stays/${listingId}?${params.toString()}`;
+
+    router.push(url);
   };
 
   const isDateDisabled = (date: Date) => {

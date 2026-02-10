@@ -98,8 +98,12 @@ const BookingClient = ({ listing }: Props) => {
     const checkOut = searchParams.get("checkOut");
 
     if (checkIn && checkOut && !date?.from) {
-      const from = new Date(checkIn);
-      const to = new Date(checkOut);
+      // Parse as local date to avoid timezone issues
+      const [fromYear, fromMonth, fromDay] = checkIn.split("-").map(Number);
+      const [toYear, toMonth, toDay] = checkOut.split("-").map(Number);
+
+      const from = new Date(fromYear, fromMonth - 1, fromDay);
+      const to = new Date(toYear, toMonth - 1, toDay);
 
       if (!isNaN(from.getTime()) && !isNaN(to.getTime())) {
         setDate({ from, to });
@@ -108,55 +112,6 @@ const BookingClient = ({ listing }: Props) => {
   }, [setDate, date?.from, searchParams]);
 
   // Sync guests from URL on mount
-  useEffect(() => {
-    const adults = searchParams.get("adults");
-    const children = searchParams.get("children");
-    const infants = searchParams.get("infants");
-    const pets = searchParams.get("pets");
-
-    const currentGuests = useGuestFilterStore.getState();
-
-    // Only sync if store is empty (first load)
-    if (
-      currentGuests.adultsCount === 0 &&
-      currentGuests.childrenCount === 0 &&
-      currentGuests.infantsCount === 0 &&
-      currentGuests.petsCount === 0
-    ) {
-      const {
-        increaseAdultsCount,
-        increaseChildrenCount,
-        increaseInfantsCount,
-        increasePetsCount,
-      } = useGuestFilterStore.getState();
-
-      if (adults) {
-        const count = parseInt(adults);
-        for (let i = 0; i < count; i++) {
-          increaseAdultsCount();
-        }
-      }
-      if (children) {
-        const count = parseInt(children);
-        for (let i = 0; i < count; i++) {
-          increaseChildrenCount();
-        }
-      }
-      if (infants) {
-        const count = parseInt(infants);
-        for (let i = 0; i < count; i++) {
-          increaseInfantsCount();
-        }
-      }
-      if (pets) {
-        const count = parseInt(pets);
-        for (let i = 0; i < count; i++) {
-          increasePetsCount();
-        }
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const { adultsCount, childrenCount, infantsCount, petsCount } =
     useGuestFilterStore();
@@ -165,14 +120,22 @@ const BookingClient = ({ listing }: Props) => {
   useEffect(() => {
     const params = new URLSearchParams(searchParams.toString());
 
+    // Helper function to format date in local timezone
+    const formatDateLocal = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
     if (date?.from) {
-      params.set("checkIn", date.from.toISOString().split("T")[0]);
+      params.set("checkIn", formatDateLocal(date.from));
     } else {
       params.delete("checkIn");
     }
 
     if (date?.to) {
-      params.set("checkOut", date.to.toISOString().split("T")[0]);
+      params.set("checkOut", formatDateLocal(date.to));
     } else {
       params.delete("checkOut");
     }
@@ -287,35 +250,41 @@ const BookingClient = ({ listing }: Props) => {
       : 0;
 
   const handleReservation = async () => {
-    if (!user) {
-      OpenAuthCard();
-      return;
-    }
+    try {
+      if (!user) {
+        OpenAuthCard();
+        return;
+      }
 
-    if (date?.to === undefined || date?.from === undefined) {
-      return;
-    }
-    const nights = numberOfNights(date.to, date.from);
+      if (date?.to === undefined || date?.from === undefined) {
+        return;
+      }
+      const nights = numberOfNights(date.to, date.from);
 
-    const totalPrice = getTotalPrice(date.from, date.to);
-    const guestId = user.id;
+      const totalPrice = getTotalPrice(date.from, date.to);
+      const guestId = user.id;
 
-    const reservation = await createReservation({
-      listingId: listing.id,
-      guestId,
-      checkInDate: date.from,
-      checkOutDate: date.to,
-      totalPrice,
-      nights,
-      pricePerNight: listing.price!,
-    });
-    if (reservation.success) {
-      toast.success("Reservation created");
-      setDate({
-        from: undefined,
-        to: undefined,
+      const reservation = await createReservation({
+        listingId: listing.id,
+        guestId,
+        checkInDate: date.from,
+        checkOutDate: date.to,
+        totalPrice,
+        nights,
+        pricePerNight: listing.price!,
       });
-      router.push("/trips/v1");
+
+      if (reservation.success) {
+        toast.success("Reservation created");
+        // Navigate first, BEFORE clearing dates to avoid useEffect interference
+        router.push("/trips/v1");
+      } else {
+        console.error("Reservation failed:", reservation.error);
+        toast.error(reservation.error || "Failed to create reservation");
+      }
+    } catch (error) {
+      console.error("Error in handleReservation:", error);
+      toast.error("An error occurred");
     }
   };
 

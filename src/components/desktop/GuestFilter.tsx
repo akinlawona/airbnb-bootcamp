@@ -39,10 +39,13 @@ const GuestFilter = (props: Props) => {
     petsCount === 0;
 
   return (
-    <Popover open={isOpen} onOpenChange={close}>
+    <Popover open={isOpen} onOpenChange={close} modal={false}>
       <PopoverAnchor asChild>
         <Button
-          onClick={toggle}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggle();
+          }}
           variant="outline"
           className="text-xs border-none shadow-none p-0 h-7 text-gray-500  hover:bg-transparent bg-transparent hover:cursor-pointer hover:text-gray-500  w-[120px] justify-start"
         >
@@ -76,7 +79,9 @@ const GuestFilter = (props: Props) => {
             </div>
             <div className="flex w-1/2 gap-3 justify-end select-none">
               <MinusCircle
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
                   if (
                     (childrenCount > 0 || infantsCount > 0 || petsCount > 0) &&
                     adultsCount === 1
@@ -99,7 +104,11 @@ const GuestFilter = (props: Props) => {
                 {adultsCount}
               </p>
               <PlusCircle
-                onClick={increaseAdultsCount}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  increaseAdultsCount();
+                }}
                 size={20}
                 className="text-gray-400 hover:text-gray-500"
               />
@@ -113,7 +122,11 @@ const GuestFilter = (props: Props) => {
             </div>
             <div className="flex gap-3 w-1/2 justify-end select-none">
               <MinusCircle
-                onClick={decreaseChildrenCount}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  decreaseChildrenCount();
+                }}
                 size={20}
                 className={`text-gray-300 ${
                   childrenCount === 0
@@ -125,7 +138,9 @@ const GuestFilter = (props: Props) => {
                 {childrenCount}
               </p>
               <PlusCircle
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
                   if (adultsCount === 0) {
                     increaseAdultsCount();
                   }
@@ -144,7 +159,11 @@ const GuestFilter = (props: Props) => {
             </div>
             <div className="flex gap-3 w-1/2 justify-end select-none">
               <MinusCircle
-                onClick={decreaseInfantsCount}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  decreaseInfantsCount();
+                }}
                 size={20}
                 className={`text-gray-300 ${
                   infantsCount === 0
@@ -156,7 +175,9 @@ const GuestFilter = (props: Props) => {
                 {infantsCount}
               </p>
               <PlusCircle
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
                   if (adultsCount === 0) {
                     increaseAdultsCount();
                   }
@@ -175,7 +196,11 @@ const GuestFilter = (props: Props) => {
             </div>
             <div className="flex gap-3 w-1/2 justify-end select-none">
               <MinusCircle
-                onClick={decreasePetsCount}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  decreasePetsCount();
+                }}
                 size={20}
                 className={`text-gray-300 ${
                   petsCount === 0
@@ -187,7 +212,9 @@ const GuestFilter = (props: Props) => {
                 {petsCount}
               </p>
               <PlusCircle
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
                   if (adultsCount === 0) {
                     increaseAdultsCount();
                   }

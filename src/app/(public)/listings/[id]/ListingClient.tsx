@@ -23,6 +23,7 @@ import { DateRange } from "react-day-picker";
 import ReservationCalendar from "@/components/listings/ReservationCalendar";
 import { WishlistButton } from "@/components/listings/WishlistButton";
 import { ContactHostButton } from "@/components/messages/ContactHostButton";
+import { MessagesDialog } from "@/components/messages/MessagesDialog";
 import { useCurrentUser } from "@/hooks/use-current-user";
 
 const StarRatings = dynamic(() => import("react-star-ratings"), {
@@ -41,13 +42,10 @@ const ListingClient = ({ listing }: Props) => {
       ? meanBy(listing.reviews, (review) => review.averageRating)
       : 0;
 
-  const [date, setDate] = React.useState<DateRange | undefined>();
-  const [isOpen, setIsOpen] = useState(false);
-
   // Check if current user is the host
   const isHost = user?.id === listing.userId;
   return (
-    <div className="max-w-7xl flex flex-col mx-auto gap-10 ">
+    <div className="max-w-7xl flex flex-col mx-auto gap-10 mt-20 p-12">
       <div className="flex items-center justify-between">
         <div className="text-3xl font-bold">{listing.title}</div>
 
@@ -206,7 +204,7 @@ const ListingClient = ({ listing }: Props) => {
             location={listing.city}
           />
         </div>
-        <div className="w-1/4 sticky top-60 self-start">
+        <div className="w-1/3 sticky top-60 self-start">
           {listing.price && listing.weekendPrice && (
             <CreateReservation
               reservations={listing.reservations}
@@ -249,6 +247,7 @@ const ListingClient = ({ listing }: Props) => {
       <ListingLocationMap lng={listing.lng} lat={listing.lat} />
       <AllReviewsDialog reviews={listing.reviews} listingId={listing.id} />
       <WriteReviewDialog listingTitle={listing.title!} />
+      <MessagesDialog />
     </div>
   );
 };

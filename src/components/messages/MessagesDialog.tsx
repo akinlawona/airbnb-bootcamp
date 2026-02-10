@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -17,7 +18,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Send } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2, Send, X } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { formatDistanceToNow } from "date-fns";
 
@@ -207,27 +209,42 @@ export function MessagesDialog() {
 
   return (
     <Dialog open={isOpen} onOpenChange={close}>
-      <DialogContent className="max-w-2xl h-[600px] flex flex-col p-0">
-        <DialogTitle className="text-center p-2">Messages</DialogTitle>
-        <DialogHeader className="px-6 py-4 border-b">
-          <div className="flex items-center gap-3">
-            {otherUser && (
-              <>
-                <Avatar>
-                  <AvatarImage src={otherUser.image || undefined} />
-                  <AvatarFallback>{otherUser.name?.[0] || "U"}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <DialogTitle>{otherUser.name}</DialogTitle>
-                  {conversation?.listing && (
-                    <p className="text-sm text-muted-foreground">
-                      {conversation.listing.title}
-                    </p>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-2xl h-[600px] !flex flex-col p-0 gap-0 overflow-hidden"
+      >
+        <DialogClose className="absolute top-6 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus-visible:outline-none hover:cursor-pointer">
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </DialogClose>
+        <DialogHeader className="px-6 py-4 border-b shrink-0">
+          {!otherUser ? (
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-4 w-48" />
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Avatar>
+                <AvatarImage src={otherUser.image || undefined} />
+                <AvatarFallback>{otherUser.name?.[0] || "U"}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <DialogTitle>{otherUser.name || "Messages"}</DialogTitle>
+                {conversation?.listing && (
+                  <p className="text-sm text-muted-foreground">
+                    {conversation.listing.title}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+          {!otherUser && (
+            <DialogTitle className="sr-only">Messages</DialogTitle>
+          )}
         </DialogHeader>
 
         {isLoading ? (
@@ -236,43 +253,47 @@ export function MessagesDialog() {
           </div>
         ) : (
           <>
-            <ScrollArea className="flex-1 px-6 py-4">
-              <div className="space-y-4">
-                {messages.map((message) => {
-                  const isOwnMessage = message.senderId === user?.id;
-                  return (
-                    <div
-                      key={message.id}
-                      className={`flex ${isOwnMessage ? "justify-end" : "justify-start"}`}
-                    >
+            <div className="flex-1 overflow-hidden">
+              <ScrollArea className="h-full px-6 py-4">
+                <div className="space-y-4">
+                  {messages.map((message) => {
+                    const isOwnMessage = message.senderId === user?.id;
+                    return (
                       <div
-                        className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                          isOwnMessage
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted"
-                        }`}
+                        key={message.id}
+                        className={`flex ${isOwnMessage ? "justify-end" : "justify-start"}`}
                       >
-                        <p className="text-sm break-words">{message.content}</p>
-                        <p
-                          className={`text-xs mt-1 ${
+                        <div
+                          className={`max-w-[70%] rounded-lg px-4 py-2 ${
                             isOwnMessage
-                              ? "text-primary-foreground/70"
-                              : "text-muted-foreground"
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted"
                           }`}
                         >
-                          {formatDistanceToNow(new Date(message.createdAt), {
-                            addSuffix: true,
-                          })}
-                        </p>
+                          <p className="text-sm break-words">
+                            {message.content}
+                          </p>
+                          <p
+                            className={`text-xs mt-1 ${
+                              isOwnMessage
+                                ? "text-primary-foreground/70"
+                                : "text-muted-foreground"
+                            }`}
+                          >
+                            {formatDistanceToNow(new Date(message.createdAt), {
+                              addSuffix: true,
+                            })}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-                <div ref={scrollRef} />
-              </div>
-            </ScrollArea>
+                    );
+                  })}
+                  <div ref={scrollRef} />
+                </div>
+              </ScrollArea>
+            </div>
 
-            <div className="p-4 border-t">
+            <div className="p-4 border-t shrink-0">
               <div className="flex gap-2">
                 <Input
                   value={newMessage}
