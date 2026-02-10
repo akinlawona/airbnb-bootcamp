@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import { getConversations } from "@/actions/messages/get-conversations";
 import { MessagesChatView } from "./MessagesChatView";
 import Image from "next/image";
 
@@ -47,21 +46,36 @@ export function MessagesInbox({ initialConversations }: MessagesInboxProps) {
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | null
   >(null);
+  const [isLoading, setIsLoading] = useState(initialConversations.length === 0);
   const user = useCurrentUser();
 
   // Poll for updated conversations
   const refreshConversations = useCallback(async () => {
-    const result = await getConversations();
-    if (result.conversations) {
-      setConversations(result.conversations as Conversation[]);
+    try {
+      const response = await fetch("/api/messages/conversations");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.conversations) {
+          setConversations(data.conversations as Conversation[]);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching conversations:", error);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    // Poll every 5 seconds
-    const interval = setInterval(refreshConversations, 5000);
+    // Fetch initial conversations if empty
+    if (initialConversations.length === 0) {
+      refreshConversations();
+    }
+
+    // Poll every 30 seconds for updates
+    const interval = setInterval(refreshConversations, 30000);
     return () => clearInterval(interval);
-  }, [refreshConversations]);
+  }, [refreshConversations, initialConversations.length]);
 
   const handleConversationClick = (conversationId: string) => {
     setSelectedConversationId(conversationId);
@@ -81,14 +95,62 @@ export function MessagesInbox({ initialConversations }: MessagesInboxProps) {
     );
   };
 
-  const handleConversationLoad = () => {
-    // Refresh conversations after marking as read
-    refreshConversations();
-  };
+  const selectedConversation = conversations.find(
+    (c) => c.id === selectedConversationId,
+  );
 
   const handleBack = () => {
     setSelectedConversationId(null);
   };
+
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <div className="flex h-[calc(100vh-80px)]">
+        {/* Conversations List Skeleton */}
+        <div className="w-full md:w-96 border-r bg-white flex flex-col">
+          <div className="px-6 py-4 border-b">
+            <div className="h-8 w-32 bg-gray-200 animate-pulse rounded" />
+          </div>
+          <div className="flex-1 divide-y">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="p-4">
+                <div className="flex gap-3">
+                  <div className="h-12 w-12 bg-gray-200 animate-pulse rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-3/4 bg-gray-200 animate-pulse rounded" />
+                    <div className="h-3 w-1/2 bg-gray-200 animate-pulse rounded" />
+                    <div className="h-3 w-full bg-gray-200 animate-pulse rounded" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Empty chat view */}
+        <div className="flex-1 hidden md:flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <div className="mb-4 text-gray-400">
+              <svg
+                className="mx-auto h-16 w-16"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+            </div>
+            <p className="text-gray-500">Loading messages...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (conversations.length === 0) {
     return (
@@ -157,7 +219,8 @@ export function MessagesInbox({ initialConversations }: MessagesInboxProps) {
                       <Avatar className="h-12 w-12">
                         <AvatarImage src={otherUser.image || undefined} />
                         <AvatarFallback>
-                          {otherUser.name?.[0] || "U"}
+                          {otherUser.name?.[0] ||
+                            otherUser.email?.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       {hasUnread && (
@@ -224,7 +287,7 @@ export function MessagesInbox({ initialConversations }: MessagesInboxProps) {
       >
         <MessagesChatView
           conversationId={selectedConversationId}
-          onConversationLoad={handleConversationLoad}
+          conversationData={selectedConversation}
           onBack={handleBack}
         />
       </div>

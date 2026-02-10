@@ -11,6 +11,7 @@ import { SessionProvider } from "next-auth/react";
 import AuthDialog from "@/components/auth/AuthDialog";
 import CreateListingDialog from "@/components/listings/CreateListingDialog";
 import ExitDialog from "@/components/listings/ExitDialog";
+import ScrollNavbar from "../../../test-navbar/ScrollNavbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,6 +45,7 @@ export default function PublicLayout({
 
       <div className="hidden md:block">
         <Navbar />
+        {/* <ScrollNavbar /> */}
       </div>
       <div className="md:mt-60">
         <Container>

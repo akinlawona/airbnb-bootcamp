@@ -11,14 +11,17 @@ import {
 export default auth((req) => {
   const { nextUrl } = req;
 
+  // Skip middleware for messages route entirely
+  if (nextUrl.pathname === "/messages") {
+    return NextResponse.next();
+  }
+
   const isLoggedIn = !!req.auth;
 
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
   const isListingsRoute = nextUrl.pathname.startsWith(listingsPrefix);
-
-  console.log(isPublicRoute);
 
   if (isAuthRoute) {
     if (isLoggedIn) {
@@ -35,7 +38,7 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  if (!isLoggedIn && !isPublicRoute && isListingsRoute) {
+  if (!isLoggedIn && !isPublicRoute && !isListingsRoute) {
     let callbackUrl = nextUrl.pathname;
 
     if (nextUrl.search) {
@@ -49,9 +52,11 @@ export default auth((req) => {
     );
   }
 
-  // return NextResponse.next();
+  return NextResponse.next();
 });
 
 export const config = {
-  matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
+  matcher: [
+    "/((?!api|_next/static|_next/image|_next/data|favicon.ico|messages|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.gif$|.*\\.svg$|.*\\.webp$).*)",
+  ],
 };

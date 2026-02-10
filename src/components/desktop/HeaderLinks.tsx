@@ -11,7 +11,7 @@ const HeaderLinks = (props: Props) => {
 
   return (
     <div className="w-full">
-      <div className="flex gap-3">
+      <div className="flex gap-6">
         <div
           className={` ${
             pathname === "/"
@@ -19,7 +19,7 @@ const HeaderLinks = (props: Props) => {
               : "text-gray-600"
           }`}
         >
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex items-center gap-1">
             <Image
               src="/images/home.avif"
               alt="Homes"
@@ -27,11 +27,11 @@ const HeaderLinks = (props: Props) => {
               height={70}
               className={
                 pathname !== "/"
-                  ? "hover:scale-120 transition-all duration-150 cursor-pointer"
+                  ? "hover:scale-110 transition-all duration-150 cursor-pointer"
                   : ""
               }
             />
-            <p className="text-md hover:text-gray-900">Homes</p>
+            <p className="text-sm hover:text-gray-900">Homes</p>
           </Link>
         </div>
         <div
@@ -41,7 +41,7 @@ const HeaderLinks = (props: Props) => {
               : "text-gray-600"
           }`}
         >
-          <Link href="/experiences" className="flex items-center">
+          <Link href="/experiences" className="flex items-center gap-1">
             <Image
               src="/images/parachute.avif"
               alt="Experiences"
@@ -49,11 +49,11 @@ const HeaderLinks = (props: Props) => {
               height={70}
               className={
                 pathname !== "/experiences"
-                  ? "hover:scale-120 transition-all duration-150 cursor-pointer"
+                  ? "hover:scale-110 transition-all duration-150 cursor-pointer"
                   : ""
               }
             />
-            <p className="text-md hover:text-gray-900">Experiences</p>
+            <p className="text-sm hover:text-gray-900">Experiences</p>
           </Link>
         </div>
         <div
@@ -63,7 +63,7 @@ const HeaderLinks = (props: Props) => {
               : "text-gray-600"
           }`}
         >
-          <Link href="/services" className="flex items-center">
+          <Link href="/services" className="flex items-center gap-1">
             <Image
               src="/images/bell.avif"
               alt="Services"
@@ -71,11 +71,11 @@ const HeaderLinks = (props: Props) => {
               height={70}
               className={
                 pathname !== "/services"
-                  ? "hover:scale-120 transition-all duration-150 cursor-pointer"
+                  ? "hover:scale-110 transition-all duration-150 cursor-pointer"
                   : ""
               }
             />
-            <p className="text-md hover:text-gray-900">Services</p>
+            <p className="text-sm hover:text-gray-900">Services</p>
           </Link>
         </div>
       </div>

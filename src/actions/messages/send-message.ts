@@ -67,8 +67,6 @@ export async function sendMessage(conversationId: string, content: string) {
       }),
     ]);
 
-    revalidatePath("/messages");
-
     return { message };
   } catch (error) {
     console.error("Error sending message:", error);

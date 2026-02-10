@@ -48,8 +48,6 @@ export async function markMessagesAsRead(conversationId: string) {
       }),
     ]);
 
-    revalidatePath("/messages");
-
     return { success: true };
   } catch (error) {
     console.error("Error marking messages as read:", error);

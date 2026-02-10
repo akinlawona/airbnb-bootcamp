@@ -74,7 +74,7 @@ const Menu = (props: Props) => {
                     <p className="text-sm ">Trips</p>
                   </div>
                 </Link>
-                <Link href="/messages">
+                <Link href="/messages" prefetch={false}>
                   <div className="flex items-center hover:bg-gray-200 rounded-lg p-2 gap-2 hover:cursor-pointer">
                     <MessageCircle size={20} className="mr-2" />
                     <p className="text-sm flex-1">Messages</p>

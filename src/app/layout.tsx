@@ -3,10 +3,8 @@ import { Geist, Geist_Mono, Nunito } from "next/font/google";
 import "./globals.css";
 import NextTopLoader from "nextjs-toploader";
 import { SessionProvider } from "next-auth/react";
-import { auth } from "@/auth";
 import { Toaster } from "react-hot-toast";
 import HolyLoader from "holy-loader";
-import { MessagesDialog } from "@/components/messages/MessagesDialog";
 
 const nunito = Nunito({
   variable: "--font-nunito",
@@ -18,12 +16,11 @@ export const metadata: Metadata = {
   description: "Book your vacations and stay anywhere you want",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
   return (
     <html lang="en">
       <body className={` ${nunito.variable} antialiased `}>
@@ -35,10 +32,7 @@ export default async function RootLayout({
           easing="linear"
         /> */}
         <Toaster />
-        <SessionProvider session={session}>
-          {children}
-          <MessagesDialog />
-        </SessionProvider>
+        <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
   );
