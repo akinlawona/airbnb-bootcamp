@@ -14,6 +14,7 @@ import AuthDialog from "@/components/auth/AuthDialog";
 import CreateListingDialog from "@/components/listings/CreateListingDialog";
 import ExitDialog from "@/components/listings/ExitDialog";
 import { usePathname } from "next/navigation";
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,7 +46,9 @@ export default function PublicLayout({
 
       {!isListingPage && (
         <div className="hidden md:block">
-          <Navbar />
+          <Suspense fallback={<div className="h-20" />}>
+            <Navbar />
+          </Suspense>
         </div>
       )}
       <div className={isListingPage ? "" : "md:mt-60"}>
