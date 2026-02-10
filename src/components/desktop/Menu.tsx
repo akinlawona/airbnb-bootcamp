@@ -8,6 +8,7 @@ import { signOut, useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import useCreateListingDialogStore from "@/hooks/use-create-listing-dialog";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { useUnreadMessageCount } from "@/hooks/use-unread-message-count";
 import Link from "next/link";
 import {
   Heart,
@@ -17,6 +18,7 @@ import {
   UserCircle,
 } from "lucide-react";
 import { AiFillProfile } from "react-icons/ai";
+import { Badge } from "../ui/badge";
 
 type Props = {};
 
@@ -24,6 +26,7 @@ const Menu = (props: Props) => {
   const { open, isOpen } = useAuthCardDialogStore();
   const { open: openHostDialog } = useCreateListingDialogStore();
   const user = useCurrentUser();
+  const unreadCount = useUnreadMessageCount();
 
   return (
     <div className="hidden md:flex items-center rounded-full text-gray-600 gap-3 w-full justify-end">
@@ -71,11 +74,15 @@ const Menu = (props: Props) => {
                     <p className="text-sm ">Trips</p>
                   </div>
                 </Link>
-                <Link href="/guest/inbox">
+                <Link href="/messages">
                   <div className="flex items-center hover:bg-gray-200 rounded-lg p-2 gap-2 hover:cursor-pointer">
                     <MessageCircle size={20} className="mr-2" />
-
-                    <p className="text-sm ">Messages</p>
+                    <p className="text-sm flex-1">Messages</p>
+                    {unreadCount > 0 && (
+                      <Badge variant="default" className="ml-auto">
+                        {unreadCount}
+                      </Badge>
+                    )}
                   </div>
                 </Link>
                 <Link href="/users/profile">

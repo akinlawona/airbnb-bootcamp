@@ -1,4 +1,4 @@
-import { Listing } from "@/lib/types";
+import { ListingCardData } from "@/lib/types";
 import Image from "next/image";
 import React from "react";
 import ListingCard from "./ListingCard";
@@ -6,18 +6,24 @@ import { IoIosArrowForward } from "react-icons/io";
 import Link from "next/link";
 
 type ListingGroupProps = {
-  location: string;
-  header: string;
-  listings: Listing[];
+  city: string;
+  country: string;
+  listings: ListingCardData[];
 };
 
-const ListingsGroup = ({ location, header, listings }: ListingGroupProps) => {
+const ListingsGroup = ({ city, country, listings }: ListingGroupProps) => {
+  if (listings.length === 0) {
+    return null;
+  }
+
+  const header = country ? `${city}, ${country}` : city;
+
   return (
     <div className="mb-10">
-      <div className="flex items-center mb-5 ">
+      <div className="flex items-center mb-5">
         <Link
-          href={`/listings?location=${location}`}
-          className="flex items-center"
+          href={`/search?city=${city}`}
+          className="flex items-center hover:underline"
         >
           <p className="font-semibold text-lg text-gray-900">{header}</p>
           <IoIosArrowForward
@@ -27,9 +33,9 @@ const ListingsGroup = ({ location, header, listings }: ListingGroupProps) => {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6  gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-5">
         {listings.map((listing) => (
-          <ListingCard key={listing.id} listing={listing} location={location} />
+          <ListingCard key={listing.id} listing={listing} />
         ))}
       </div>
     </div>

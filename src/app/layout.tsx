@@ -6,6 +6,7 @@ import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
 import { Toaster } from "react-hot-toast";
 import HolyLoader from "holy-loader";
+import { MessagesDialog } from "@/components/messages/MessagesDialog";
 
 const nunito = Nunito({
   variable: "--font-nunito",
@@ -34,7 +35,10 @@ export default async function RootLayout({
           easing="linear"
         /> */}
         <Toaster />
-        <SessionProvider session={session}>{children}</SessionProvider>
+        <SessionProvider session={session}>
+          {children}
+          <MessagesDialog />
+        </SessionProvider>
       </body>
     </html>
   );

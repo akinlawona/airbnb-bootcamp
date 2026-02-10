@@ -29,6 +29,20 @@ export type ListingWithPhotos = Prisma.ListingGetPayload<{
   };
 }>;
 
+export type ListingCardData = Prisma.ListingGetPayload<{
+  include: {
+    photos: {
+      where: {
+        isCoverPicture: true;
+      };
+      take: 1;
+    };
+    reviews: true;
+    category: true;
+    privacyType: true;
+  };
+}>;
+
 export type Trips = Prisma.ReservationGetPayload<{
   include: {
     listing: {
@@ -93,3 +107,23 @@ export type ImageContentProps = {
 export type ImageFormValues = {
   images: ImageContentProps[];
 };
+
+export type WishlistWithItems = Prisma.WishlistGetPayload<{
+  include: {
+    items: {
+      include: {
+        listing: {
+          include: {
+            photos: {
+              where: {
+                isCoverPicture: true;
+              };
+              take: 1;
+            };
+            reviews: true;
+          };
+        };
+      };
+    };
+  };
+}>;

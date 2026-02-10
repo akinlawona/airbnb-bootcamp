@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { ListingWithRelations } from "@/lib/types";
 import Image from "next/image";
-import { Heart, ShareIcon } from "lucide-react";
+import { ShareIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import LeftFlower from "@/components/listings/LeftFlower";
 import RightFlower from "@/components/listings/RightFlower";
@@ -13,6 +13,7 @@ import { CustomIcon } from "@/components/CustomIcon";
 import ReviewCard from "@/components/listings/Reviews/ReviewCard";
 import { Button } from "@/components/ui/button";
 import AllReviewsDialog from "@/components/listings/Reviews/AllReviewsDialog";
+import WriteReviewDialog from "@/components/listings/WriteReviewDialog";
 import useShowAllReviewsDialogStore from "@/hooks/use-show-all-reviews-dialog";
 import ReviewsHeader from "@/components/listings/Reviews/ReviewsHeader";
 import { meanBy } from "lodash";
@@ -20,6 +21,9 @@ import ListingLocationMap from "@/components/listings/ListingLocationMap";
 import CreateReservation from "@/components/listings/CreateReservation";
 import { DateRange } from "react-day-picker";
 import ReservationCalendar from "@/components/listings/ReservationCalendar";
+import { WishlistButton } from "@/components/listings/WishlistButton";
+import { ContactHostButton } from "@/components/messages/ContactHostButton";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 const StarRatings = dynamic(() => import("react-star-ratings"), {
   ssr: false,
@@ -31,26 +35,30 @@ type Props = {
 
 const ListingClient = ({ listing }: Props) => {
   const { open } = useShowAllReviewsDialogStore();
-  const averageRating = meanBy(
-    listing.reviews,
-    (review) => review.averageRating,
-  );
+  const user = useCurrentUser();
+  const averageRating =
+    listing.reviews.length > 0
+      ? meanBy(listing.reviews, (review) => review.averageRating)
+      : 0;
 
   const [date, setDate] = React.useState<DateRange | undefined>();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Check if current user is the host
+  const isHost = user?.id === listing.userId;
   return (
     <div className="max-w-7xl flex flex-col mx-auto gap-10 ">
       <div className="flex items-center justify-between">
         <div className="text-3xl font-bold">{listing.title}</div>
 
         <div className="flex gap-2">
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center cursor-pointer hover:bg-gray-100 rounded-lg px-3 py-2 transition">
             <ShareIcon />
             <p>Share</p>
           </div>
-          <div className="flex gap-2 items-center">
-            <Heart />
-            <p className="text-sm ">Save</p>
+          <div className="flex gap-2 items-center cursor-pointer hover:bg-gray-100 rounded-lg px-3 py-2 transition">
+            <WishlistButton listingId={listing.id} className="p-0" />
+            <p className="text-sm">Save</p>
           </div>
         </div>
       </div>
@@ -113,47 +121,51 @@ const ListingClient = ({ listing }: Props) => {
               </p>
             </div>
           </div>
-          <Card>
-            <CardContent className="flex items-center justify-around gap-1">
-              <div className="flex items-center gap-1">
-                <LeftFlower height={32} />
-                <div className="flex flex-col justify-center items-center h-[32px]">
-                  <p className="text-sm font-bold">Guest</p>
-                  <p className="text-sm font-bold">Favorite</p>
+          {listing.reviews.length > 0 && (
+            <Card>
+              <CardContent className="flex items-center justify-around gap-1">
+                <div className="flex items-center gap-1">
+                  <LeftFlower height={32} />
+                  <div className="flex flex-col justify-center items-center h-[32px]">
+                    <p className="text-sm font-bold">Guest</p>
+                    <p className="text-sm font-bold">Favorite</p>
+                  </div>
+                  <RightFlower height={32} />
                 </div>
-                <RightFlower height={32} />
-              </div>
-              <p className="text-sm font-bold">
-                One of the most loved homes on Airbnb,
-                <br /> according to guests
-              </p>
-              <div className="flex flex-col items-center">
-                <p className="text-xl font-bold">{averageRating}</p>
-                <StarRatings
-                  rating={averageRating}
-                  starRatedColor="black"
-                  starDimension="12px"
-                  starSpacing="1px"
-                />
-              </div>
-
-              <div className="border-l border-l-gray-400 h-full"></div>
-
-              <div className="flex flex-col justify-center items-center">
-                <p className="text-xl font-bold">{listing.reviews.length}</p>
-                <p className="text-sm">
-                  {listing.reviews.length === 1 ? "Review" : "Reviews"}
+                <p className="text-sm font-bold">
+                  One of the most loved homes on Airbnb,
+                  <br /> according to guests
                 </p>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="flex flex-col items-center">
+                  <p className="text-xl font-bold">
+                    {averageRating.toFixed(1)}
+                  </p>
+                  <StarRatings
+                    rating={averageRating}
+                    starRatedColor="black"
+                    starDimension="12px"
+                    starSpacing="1px"
+                  />
+                </div>
+
+                <div className="border-l border-l-gray-400 h-full"></div>
+
+                <div className="flex flex-col justify-center items-center">
+                  <p className="text-xl font-bold">{listing.reviews.length}</p>
+                  <p className="text-sm">
+                    {listing.reviews.length === 1 ? "Review" : "Reviews"}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="flex gap-3">
             <Avatar className="size-12">
               <AvatarImage src={`${listing.user.image}`} />
               <AvatarFallback>{listing.user.name?.charAt(0)}</AvatarFallback>
             </Avatar>
-            <div className="flex flex-col">
+            <div className="flex flex-col flex-1">
               <p className="text-md font-bold">Hosted by {listing.user.name}</p>
 
               <p className="text-xs text-muted-foreground">
@@ -162,6 +174,16 @@ const ListingClient = ({ listing }: Props) => {
               </p>
             </div>
           </div>
+
+          {/* Contact Host Button - only show for non-hosts */}
+          {!isHost && user && (
+            <div className="mt-4">
+              <ContactHostButton
+                listingId={listing.id}
+                hostName={listing.user.name || undefined}
+              />
+            </div>
+          )}
           <hr className="my-3" />
           <div>
             <p className="text-sm">{listing.description}</p>
@@ -195,29 +217,38 @@ const ListingClient = ({ listing }: Props) => {
           )}
         </div>
       </div>
-      <hr className="my-3" />
-      <ReviewsHeader reviews={listing.reviews} />
-      <hr className="my-3" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-        {listing.reviews.slice(0, 6).map((review) => (
-          <ReviewCard key={review.id} review={review} />
-        ))}
-      </div>
-      {listing.reviews.length > 10 ? (
-        <div className="w-full md:w-1/4">
-          <Button
-            variant="outline"
-            className="w-full  pl-6 pr-6 bg-[#FAFAFA] text-black"
-            onClick={open}
-          >
-            Show All {listing.reviews.length} Reviews
-          </Button>
-        </div>
-      ) : null}
+      {listing.reviews.length > 0 && (
+        <>
+          <hr className="my-3" />
+          <ReviewsHeader reviews={listing.reviews} />
+          <hr className="my-3" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            {listing.reviews.slice(0, 6).map((review) => (
+              <ReviewCard
+                key={review.id}
+                review={review}
+                listingId={listing.id}
+              />
+            ))}
+          </div>
+          {listing.reviews.length > 10 ? (
+            <div className="w-full md:w-1/4">
+              <Button
+                variant="outline"
+                className="w-full  pl-6 pr-6 bg-[#FAFAFA] text-black"
+                onClick={open}
+              >
+                Show All {listing.reviews.length} Reviews
+              </Button>
+            </div>
+          ) : null}
+        </>
+      )}
 
       <hr className="my-3" />
       <ListingLocationMap lng={listing.lng} lat={listing.lat} />
-      <AllReviewsDialog reviews={listing.reviews} />
+      <AllReviewsDialog reviews={listing.reviews} listingId={listing.id} />
+      <WriteReviewDialog listingTitle={listing.title!} />
     </div>
   );
 };

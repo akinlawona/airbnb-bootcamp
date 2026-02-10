@@ -1,59 +1,81 @@
-import { Listing } from "@/lib/types";
+import { ListingCardData } from "@/lib/types";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import { Badge } from "../ui/badge";
-import { AiOutlineHeart, AiFillHeart } from "react-icons/ai";
-import { averageRating } from "@/lib/helpers";
 import { MIDDOT } from "@/lib/constants";
 import { FaStar } from "react-icons/fa";
+import { WishlistButton } from "./WishlistButton";
+import { meanBy } from "lodash";
+import { priceFormatter } from "@/lib/helpers";
 
 type ListingCardProps = {
-  listing: Listing;
-  location?: string;
+  listing: ListingCardData;
 };
 
-const ListingCard = ({ listing, location }: ListingCardProps) => {
+const ListingCard = ({ listing }: ListingCardProps) => {
+  const averageRating = listing.reviews.length
+    ? meanBy(listing.reviews, (review) => review.averageRating)
+    : null;
+
+  const coverPhoto = listing.photos[0];
+
   return (
-    <div className="flex flex-col gap-1 ">
+    <div className="flex flex-col gap-1">
       <Link href={`/listings/${listing.id}`}>
         <div className="flex flex-col gap-3">
-          <div className="relative w-full rounded-2xl overflow-hidden">
+          <div className="relative w-full rounded-2xl overflow-hidden group">
             <div className="h-72 w-72 md:h-48 md:w-48">
               <Image
-                src={listing.imageUrl}
-                alt={listing.title}
+                src={coverPhoto?.url || "/images/placeholder.avif"}
+                alt={listing.title || "Listing"}
                 fill={true}
-                objectFit="cover"
-
-                //   loading="lazy"
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
               />
             </div>
 
-            {listing.guestFavorite && (
+            {listing.isGuestFavorite && (
               <Badge
                 variant="secondary"
-                className="absolute top-2 left-2 rounded-full opacity-90  text-xs"
+                className="absolute top-2 left-2 rounded-full opacity-90 text-xs"
               >
                 Guest favorite
               </Badge>
             )}
-            <AiOutlineHeart
-              size={20}
-              className="absolute top-2 right-2 text-white opacity-90 cursor-pointer"
-            />
+            <div className="absolute top-2 right-2">
+              <WishlistButton listingId={listing.id} />
+            </div>
           </div>
+
           <div className="flex flex-col gap-1">
-            <p className="font-semibold text-xs text-gray-900 ">
-              {listing.listingType} in {location}
+            <div className="flex items-center justify-between">
+              <p className="font-semibold text-sm text-gray-900">
+                {listing.city && listing.country
+                  ? `${listing.city}, ${listing.country}`
+                  : listing.location || "Location not specified"}
+              </p>
+              {averageRating && (
+                <div className="flex items-center gap-1">
+                  <FaStar className="text-xs" />
+                  <p className="text-xs font-medium">
+                    {averageRating.toFixed(2)}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <p className="text-sm text-gray-600">
+              {listing.privacyType?.name || "Entire place"}
             </p>
 
-            <div className="flex items-center gap-1 text-xs text-gray-500">
-              <p>${listing.price * 2} for 2 nights</p>
-              <p className="scale-200">{MIDDOT}</p>
-              <FaStar className="inline-block text-gray-500" />
-              <p>{averageRating(listing.reviews).toFixed(1)} </p>
-            </div>
+            {listing.price && (
+              <div className="flex items-center gap-1 text-sm mt-1">
+                <p className="font-semibold">
+                  {priceFormatter.format(listing.price)} kr
+                </p>
+                <p className="text-gray-600">night</p>
+              </div>
+            )}
           </div>
         </div>
       </Link>

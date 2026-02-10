@@ -2,6 +2,7 @@
 import { Trips } from "@/lib/types";
 import React from "react";
 import TripCard from "./TripCard";
+import WriteReviewDialog from "@/components/listings/WriteReviewDialog";
 
 type Props = {
   trips: Trips[];
@@ -16,6 +17,7 @@ const TripsClient = ({ trips }: Props) => {
           <TripCard key={trip.id} trip={trip} />
         ))}
       </div>
+      <WriteReviewDialog />
     </div>
   );
 };

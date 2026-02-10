@@ -17,9 +17,10 @@ import ReviewsHeader from "./ReviewsHeader";
 
 type Props = {
   reviews: ReviewWithUserInfo[];
+  listingId: string;
 };
 
-const AllReviewsDialog = ({ reviews }: Props) => {
+const AllReviewsDialog = ({ reviews, listingId }: Props) => {
   const { isOpen, close } = useShowAllReviewsDialogStore();
   const [selectedSort, setSelectedSort] = useState("Most relevant");
   const [sortedReviews, setSortedReviews] = useState(reviews);
@@ -132,7 +133,11 @@ const AllReviewsDialog = ({ reviews }: Props) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
               {sortedReviews.length > 0 ? (
                 sortedReviews.map((review) => (
-                  <ReviewCard key={review.id} review={review} />
+                  <ReviewCard
+                    key={review.id}
+                    review={review}
+                    listingId={listingId}
+                  />
                 ))
               ) : searchText.trim() !== "" ? (
                 <div className="col-span-2 text-center py-10 text-gray-500">

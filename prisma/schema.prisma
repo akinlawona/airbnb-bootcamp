@@ -27,10 +27,16 @@ model User {
   listings      Listing[]
   reviews       Review[]
   reservations  Reservation[]
+  wishlists     Wishlist[]
 
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   reviewHelpfulnesses ReviewHelpfulness[]
+
+  // Messaging relations
+  guestConversations Conversation[] @relation("GuestConversations")
+  hostConversations  Conversation[] @relation("HostConversations")
+  sentMessages       Message[]      @relation("SentMessages")
 }
 
 model Account {
@@ -89,7 +95,7 @@ model Authenticator {
 }
 
 model Listing {
-  id                        String        @id @default(cuid())
+  id                        String         @id @default(cuid())
   title                     String?
   description               String?
   location                  String?
@@ -103,40 +109,42 @@ model Listing {
   weekendPrice              Int?
   weekendPremium            Int?
   userId                    String
-  user                      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  isGuestFavorite           Boolean       @default(false)
+  user                      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isGuestFavorite           Boolean        @default(false)
   hostType                  String?
   reviews                   Review[]
   images                    Json?
-  createdAt                 DateTime      @default(now())
-  updatedAt                 DateTime      @updatedAt
-  guestCount                Int           @default(1)
-  bedroomCount              Int           @default(0)
-  bedCount                  Int           @default(1)
-  bathroomCount             Float         @default(0.5)
+  createdAt                 DateTime       @default(now())
+  updatedAt                 DateTime       @updatedAt
+  guestCount                Int            @default(1)
+  bedroomCount              Int            @default(0)
+  bedCount                  Int            @default(1)
+  bathroomCount             Float          @default(0.5)
   amenityIds                String[]
   amenities                 Amenity[]
   categoryId                String?
-  category                  Category?     @relation(fields: [categoryId], references: [id])
+  category                  Category?      @relation(fields: [categoryId], references: [id])
   step                      String?
-  isPublished               Boolean       @default(false)
-  isListed                  Boolean       @default(false)
+  isPublished               Boolean        @default(false)
+  isListed                  Boolean        @default(false)
   privacyTypeId             String?
-  privacyType               PrivacyType?  @relation(fields: [privacyTypeId], references: [id])
-  isNewListingDiscount      Boolean       @default(true)
-  newListingDiscount        Int?          @default(20)
-  isLastMinuteDiscount      Boolean       @default(false)
-  isWeeklyDiscount          Boolean       @default(true)
-  isMonthlyDiscount         Boolean       @default(true)
-  lastMinuteDiscount        Int?          @default(0)
-  weeklyDiscount            Int?          @default(12)
-  monthlyDiscount           Int?          @default(25)
-  isNoiseMonitor            Boolean       @default(false)
-  isWeapons                 Boolean       @default(false)
-  isSecurityCamera          Boolean       @default(false)
+  privacyType               PrivacyType?   @relation(fields: [privacyTypeId], references: [id])
+  isNewListingDiscount      Boolean        @default(true)
+  newListingDiscount        Int?           @default(20)
+  isLastMinuteDiscount      Boolean        @default(false)
+  isWeeklyDiscount          Boolean        @default(true)
+  isMonthlyDiscount         Boolean        @default(true)
+  lastMinuteDiscount        Int?           @default(0)
+  weeklyDiscount            Int?           @default(12)
+  monthlyDiscount           Int?           @default(25)
+  isNoiseMonitor            Boolean        @default(false)
+  isWeapons                 Boolean        @default(false)
+  isSecurityCamera          Boolean        @default(false)
   securityCameraDescription String?
   photos                    Photo[]
   reservations              Reservation[]
+  wishlistItems             WishlistItem[]
+  conversations             Conversation[]
 }
 
 model Reservation {
@@ -289,4 +297,74 @@ model Photo {
   @@index([listingId, isCoverPicture])
   // Optional: if you verify signatures or use them in secure image flows
   @@index([publicId, signature])
+}
+
+model Wishlist {
+  id        String         @id @default(cuid())
+  name      String         @default("My Wishlist")
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     WishlistItem[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([userId])
+}
+
+model WishlistItem {
+  id         String   @id @default(cuid())
+  wishlistId String
+  listingId  String
+  wishlist   Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([wishlistId, listingId])
+  @@index([wishlistId])
+  @@index([listingId])
+}
+
+model Conversation {
+  id            String    @id @default(cuid())
+  listingId     String
+  guestId       String
+  hostId        String
+  lastMessage   String?   @db.Text
+  lastMessageAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  listing  Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  guest    User      @relation("GuestConversations", fields: [guestId], references: [id], onDelete: Cascade)
+  host     User      @relation("HostConversations", fields: [hostId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  // Unread message counts
+  guestUnreadCount Int @default(0)
+  hostUnreadCount  Int @default(0)
+
+  @@unique([listingId, guestId, hostId])
+  @@index([guestId])
+  @@index([hostId])
+  @@index([listingId])
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id             String    @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String    @db.Text
+  isRead         Boolean   @default(false)
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+  @@index([conversationId, createdAt])
 }

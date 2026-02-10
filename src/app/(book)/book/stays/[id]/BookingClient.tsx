@@ -29,7 +29,7 @@ import useReservationCalendarDialogStore from "@/hooks/use-reservation-calendar-
 import GuestFilterDialog from "@/components/desktop/GuestFilterDialog";
 import useGuestFilterDialogStore from "@/hooks/use-guest-filter-dialog";
 import useGuestFilterStore from "@/hooks/use-guest-filter-store";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type Props = {
   listing: ListingWithRelations;
@@ -90,6 +90,129 @@ const BookingClient = ({ listing }: Props) => {
   const { open } = useReservationCalendarDialogStore();
   const { open: openGuestFilter } = useGuestFilterDialogStore();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Sync dates from URL on mount
+  useEffect(() => {
+    const checkIn = searchParams.get("checkIn");
+    const checkOut = searchParams.get("checkOut");
+
+    if (checkIn && checkOut && !date?.from) {
+      const from = new Date(checkIn);
+      const to = new Date(checkOut);
+
+      if (!isNaN(from.getTime()) && !isNaN(to.getTime())) {
+        setDate({ from, to });
+      }
+    }
+  }, [setDate, date?.from, searchParams]);
+
+  // Sync guests from URL on mount
+  useEffect(() => {
+    const adults = searchParams.get("adults");
+    const children = searchParams.get("children");
+    const infants = searchParams.get("infants");
+    const pets = searchParams.get("pets");
+
+    const currentGuests = useGuestFilterStore.getState();
+
+    // Only sync if store is empty (first load)
+    if (
+      currentGuests.adultsCount === 0 &&
+      currentGuests.childrenCount === 0 &&
+      currentGuests.infantsCount === 0 &&
+      currentGuests.petsCount === 0
+    ) {
+      const {
+        increaseAdultsCount,
+        increaseChildrenCount,
+        increaseInfantsCount,
+        increasePetsCount,
+      } = useGuestFilterStore.getState();
+
+      if (adults) {
+        const count = parseInt(adults);
+        for (let i = 0; i < count; i++) {
+          increaseAdultsCount();
+        }
+      }
+      if (children) {
+        const count = parseInt(children);
+        for (let i = 0; i < count; i++) {
+          increaseChildrenCount();
+        }
+      }
+      if (infants) {
+        const count = parseInt(infants);
+        for (let i = 0; i < count; i++) {
+          increaseInfantsCount();
+        }
+      }
+      if (pets) {
+        const count = parseInt(pets);
+        for (let i = 0; i < count; i++) {
+          increasePetsCount();
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const { adultsCount, childrenCount, infantsCount, petsCount } =
+    useGuestFilterStore();
+
+  // Update URL when dates or guests change
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (date?.from) {
+      params.set("checkIn", date.from.toISOString().split("T")[0]);
+    } else {
+      params.delete("checkIn");
+    }
+
+    if (date?.to) {
+      params.set("checkOut", date.to.toISOString().split("T")[0]);
+    } else {
+      params.delete("checkOut");
+    }
+
+    if (adultsCount > 0) {
+      params.set("adults", adultsCount.toString());
+    } else {
+      params.delete("adults");
+    }
+
+    if (childrenCount > 0) {
+      params.set("children", childrenCount.toString());
+    } else {
+      params.delete("children");
+    }
+
+    if (infantsCount > 0) {
+      params.set("infants", infantsCount.toString());
+    } else {
+      params.delete("infants");
+    }
+
+    if (petsCount > 0) {
+      params.set("pets", petsCount.toString());
+    } else {
+      params.delete("pets");
+    }
+
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    router.replace(newUrl, { scroll: false });
+  }, [
+    date?.from,
+    date?.to,
+    adultsCount,
+    childrenCount,
+    infantsCount,
+    petsCount,
+    router,
+    searchParams,
+  ]);
 
   const getNightsText = (from?: Date, to?: Date) => {
     if (!from || !to) return "";
@@ -158,10 +281,10 @@ const BookingClient = ({ listing }: Props) => {
     return stepIndex < currentIndex;
   };
 
-  const averageRating = meanBy(
-    listing.reviews,
-    (review) => review.averageRating,
-  );
+  const averageRating =
+    listing.reviews.length > 0
+      ? meanBy(listing.reviews, (review) => review.averageRating)
+      : 0;
 
   const handleReservation = async () => {
     if (!user) {
@@ -195,8 +318,6 @@ const BookingClient = ({ listing }: Props) => {
       router.push("/trips/v1");
     }
   };
-  const { adultsCount, childrenCount, infantsCount, petsCount } =
-    useGuestFilterStore();
 
   const isGuestEmpty =
     adultsCount === 0 &&
@@ -420,17 +541,19 @@ const BookingClient = ({ listing }: Props) => {
                       <p className="text-lg font-bold line-clamp-">
                         {listing.title}
                       </p>
-                      <div className="flex gap-2 items-baseline">
-                        <StarRatings
-                          rating={averageRating}
-                          starRatedColor="black"
-                          starDimension="12px"
-                          starSpacing="1px"
-                        />
-                        <p className="text-xs">
-                          {averageRating}({listing.reviews.length})
-                        </p>
-                      </div>
+                      {listing.reviews.length > 0 && (
+                        <div className="flex gap-2 items-baseline">
+                          <StarRatings
+                            rating={averageRating}
+                            starRatedColor="black"
+                            starDimension="12px"
+                            starSpacing="1px"
+                          />
+                          <p className="text-xs">
+                            {averageRating.toFixed(1)}({listing.reviews.length})
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex flex-col">

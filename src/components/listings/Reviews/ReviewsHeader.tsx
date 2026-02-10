@@ -14,28 +14,24 @@ type Props = {
 };
 
 const ReviewsHeader = ({ reviews }: Props) => {
-  const averageRating = meanBy(reviews, (review) => review.averageRating);
-  const averageCleanlinessRating = meanBy(
-    reviews,
-    (review) => review.cleanlinessRating,
-  );
-  const averageAccuracyRating = meanBy(
-    reviews,
-    (review) => review.accuracyRating,
-  );
-  const averageCheckInRating = meanBy(
-    reviews,
-    (review) => review.checkInRating,
-  );
-  const averageCommunicationRating = meanBy(
-    reviews,
-    (review) => review.communicationRating,
-  );
-  const averageLocationRating = meanBy(
-    reviews,
-    (review) => review.locationRating,
-  );
-  const averageValueRating = meanBy(reviews, (review) => review.valueRating);
+  const averageRating =
+    reviews.length > 0 ? meanBy(reviews, (review) => review.averageRating) : 0;
+  const averageCleanlinessRating =
+    reviews.length > 0
+      ? meanBy(reviews, (review) => review.cleanlinessRating)
+      : 0;
+  const averageAccuracyRating =
+    reviews.length > 0 ? meanBy(reviews, (review) => review.accuracyRating) : 0;
+  const averageCheckInRating =
+    reviews.length > 0 ? meanBy(reviews, (review) => review.checkInRating) : 0;
+  const averageCommunicationRating =
+    reviews.length > 0
+      ? meanBy(reviews, (review) => review.communicationRating)
+      : 0;
+  const averageLocationRating =
+    reviews.length > 0 ? meanBy(reviews, (review) => review.locationRating) : 0;
+  const averageValueRating =
+    reviews.length > 0 ? meanBy(reviews, (review) => review.valueRating) : 0;
 
   const fiveStarCount = reviews.filter(
     (review) => review.averageRating === 5,
@@ -71,7 +67,7 @@ const ReviewsHeader = ({ reviews }: Props) => {
         <div className="flex items-center gap-2">
           <LeftFlower height={96} />
 
-          <p className="text-8xl font-bold">{averageRating}</p>
+          <p className="text-8xl font-bold">{averageRating.toFixed(1)}</p>
 
           <RightFlower height={96} />
         </div>

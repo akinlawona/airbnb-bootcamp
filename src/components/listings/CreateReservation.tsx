@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -27,7 +27,7 @@ import GuestFilterReservation from "../desktop/GuestFilterReservation";
 import useGuestFilterStore from "@/hooks/use-guest-filter-store";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import useAuthCardDialogStore from "@/hooks/use-auth-card-dialog";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type Props = {
   listingId: string;
@@ -46,8 +46,121 @@ const CreateReservation = ({
   const [isOpen, setIsOpen] = useState(false);
   const { open: OpenAuthCard } = useAuthCardDialogStore();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const user = useCurrentUser();
+
+  // Sync dates from URL on mount
+  useEffect(() => {
+    const checkIn = searchParams.get("checkIn");
+    const checkOut = searchParams.get("checkOut");
+
+    if (checkIn && checkOut) {
+      const from = new Date(checkIn);
+      const to = new Date(checkOut);
+
+      if (!isNaN(from.getTime()) && !isNaN(to.getTime())) {
+        setDate({ from, to });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Sync guests from URL on mount
+  useEffect(() => {
+    const adults = searchParams.get("adults");
+    const children = searchParams.get("children");
+    const infants = searchParams.get("infants");
+    const pets = searchParams.get("pets");
+
+    const {
+      increaseAdultsCount,
+      increaseChildrenCount,
+      increaseInfantsCount,
+      increasePetsCount,
+    } = useGuestFilterStore.getState();
+
+    if (adults) {
+      const count = parseInt(adults);
+      for (let i = 0; i < count; i++) {
+        increaseAdultsCount();
+      }
+    }
+    if (children) {
+      const count = parseInt(children);
+      for (let i = 0; i < count; i++) {
+        increaseChildrenCount();
+      }
+    }
+    if (infants) {
+      const count = parseInt(infants);
+      for (let i = 0; i < count; i++) {
+        increaseInfantsCount();
+      }
+    }
+    if (pets) {
+      const count = parseInt(pets);
+      for (let i = 0; i < count; i++) {
+        increasePetsCount();
+      }
+    }
+  }, [searchParams]);
+
+  const { adultsCount, childrenCount, infantsCount, petsCount } =
+    useGuestFilterStore();
+
+  // Update URL when dates or guests change
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (date?.from) {
+      params.set("checkIn", date.from.toISOString().split("T")[0]);
+    } else {
+      params.delete("checkIn");
+    }
+
+    if (date?.to) {
+      params.set("checkOut", date.to.toISOString().split("T")[0]);
+    } else {
+      params.delete("checkOut");
+    }
+
+    if (adultsCount > 0) {
+      params.set("adults", adultsCount.toString());
+    } else {
+      params.delete("adults");
+    }
+
+    if (childrenCount > 0) {
+      params.set("children", childrenCount.toString());
+    } else {
+      params.delete("children");
+    }
+
+    if (infantsCount > 0) {
+      params.set("infants", infantsCount.toString());
+    } else {
+      params.delete("infants");
+    }
+
+    if (petsCount > 0) {
+      params.set("pets", petsCount.toString());
+    } else {
+      params.delete("pets");
+    }
+
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    router.replace(newUrl, { scroll: false });
+  }, [
+    date?.from,
+    date?.to,
+    adultsCount,
+    childrenCount,
+    infantsCount,
+    petsCount,
+    searchParams,
+    router,
+  ]);
 
   const handleReset = () => {
     setDate({
@@ -74,7 +187,27 @@ const CreateReservation = ({
       OpenAuthCard();
       return;
     }
-    router.push(`/book/stays/${listingId}`);
+
+    // Build URL with current params
+    const params = new URLSearchParams();
+
+    if (date?.from) {
+      params.set("checkIn", date.from.toISOString().split("T")[0]);
+    }
+
+    if (date?.to) {
+      params.set("checkOut", date.to.toISOString().split("T")[0]);
+    }
+
+    const { adultsCount, childrenCount, infantsCount, petsCount } =
+      useGuestFilterStore.getState();
+
+    if (adultsCount > 0) params.set("adults", adultsCount.toString());
+    if (childrenCount > 0) params.set("children", childrenCount.toString());
+    if (infantsCount > 0) params.set("infants", infantsCount.toString());
+    if (petsCount > 0) params.set("pets", petsCount.toString());
+
+    router.push(`/book/stays/${listingId}?${params.toString()}`);
   };
 
   const isDateDisabled = (date: Date) => {
@@ -95,9 +228,6 @@ const CreateReservation = ({
       });
     });
   };
-
-  const { adultsCount, childrenCount, infantsCount, petsCount } =
-    useGuestFilterStore();
 
   const {
     isOpen: isGuestFilterOpen,
